@@ -1,11 +1,17 @@
-#By Keith Lohse, Rehabilitation Informatics Lab, 2016-04-26
+#By Keith Lohse, Rehabilitation Informatics Lab, 2016-10-07
 
 # For this analysis, you will need to install and then open the following packages:
 # install.packages("metafor"); install.packages("dplyr"); install.packages("ggplot2")
 library("metafor"); library("dplyr"); library("ggplot2")
 
+## Setting the Directory -------------------------------------------------------
+getwd()
+setwd("C:/Users/krl0022/Documents/GitHub/dose_meta/") 
+list.files()
+# make sure "data SCOAR TEXT OUTLIERS REMOVED.csv" is in the directory.
+
 # Read in the full data set
-DATA<-read.table("data SCOAR TEXT OUTLIERS REMOVED.txt", header = TRUE, sep="\t") 
+DATA<-read.csv("data SCOAR TEXT OUTLIERS REMOVED.csv", header = TRUE) 
 head(DATA)
 
 # Alternatively, you can read the text file into R directly from my GitHub repo:
@@ -14,6 +20,7 @@ head(DATA)
 # head(DATA)
 
 # Note that all effect sizes greater than d = 3.0 have been removed
+
 
 ##########################################
 ### Analysis of the primary extraction ###
@@ -73,6 +80,8 @@ summary(EXPS$group)
 #################################################
 # Descriptive Statistics of the included Groups #
 #################################################
+## Table 1 ---------------------------------------------------------------------
+# These descriptive statistics appear in Table 1 of the manuscript.
 # average age of patients at baseline
 summary(LOHSE$age_base) 
 sd(LOHSE$age_base)
@@ -115,6 +124,8 @@ summary(LOHSE$group)
 # Number of subjects contributing to the terminal means
 summary(LOHSE$term_g) 
 sd(LOHSE$term_g)
+## -----------------------------------------------------------------------------
+
 
 
 ##############################
@@ -132,16 +143,19 @@ m0A
 m0B<-rma(term_g, term_Vg, data=EXPS, method="ML") 
 m0B
 
-
+## Figure 1 --------------------------------------------------------------------
+# Publication Bias
 # Creating a forest plot to show the RE model of all of the data
 forest(m0, slab=paste(LOHSE$author, LOHSE$year, sep=", "), cex=1.5)
 
 # Creating a funnel plot to show potential bias in the full dataset
-palette(c("orange","dodgerblue"))
-funnel(m0, pch=21, bg=LOHSE$group, cex = 1.5, cex.axis=1.25, cex.lab=1.25, xlab="Terminal Outcome (g)")
+palette(c("#fee8c8","#e34a33"))
+funnel(m0, pch=21, bg=LOHSE$group, cex = 1.5, cex.axis=1.25, cex.lab=1.25, 
+       xlab="Terminal Outcome (g)")
 # Statistical test of symmetry (see Eggers, 1997)
 regtest(m0, model = "lm") 
 # Significant result indicates bias in the distribution of results
+## -----------------------------------------------------------------------------
 
 # Moderator Analysis of Treatment Versus Control Groups
 ## First we need to center the "group" variable
@@ -261,47 +275,54 @@ cor.test(resid(m5),fitted(m5))
 #########################################
 # Plots for Multivariable Relationships #
 #########################################
-palette(c("purple","chartreuse","cyan"))
+# palette(c("#e0ecf4", "#9ebcda", "#8856a7"))
+# 
+# # Plot of outcomes by DOSE and DPS
+# plot(LOHSE$term_g~LOHSE$rtTIME, bty='n', type='p', pch=21, bg=LOHSE$days_cat, 
+#      col="black", lwd=1.0, xlim=c(-1,15), ylim=c(-0.5,3.5), 
+#      cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,
+#      ylab="Terminal Outcome (g)", xlab="Time Scheduled for Therapy (sqrt(hrs))")
+# ## Cyan = <90 days post stroke, green = <365 days post stroke, purple = > 365 days post stroke
+# 
+# 
+# # Plot of outcomes by AGE
+# # the ntile function chops the variable into X equally sized groups.
+# LOHSE$AGEq <- ntile(LOHSE$age_base, 4)  
+# palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
+# 
+# plot(LOHSE$term_g~LOHSE$age_base, bty='n', xlim=c(40,90), ylim=c(-0.5,3.5), bg=LOHSE$AGEq, col = "black",
+#      pch=21, cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,  
+#      ylab="Terminal Outcome (g)", xlab="Average Age (years)")
 
-# Plot of outcomes by DOSE and DPS
-plot(LOHSE$term_g~LOHSE$rtTIME, bty='n', type='p', pch=21, bg=LOHSE$days_cat, col="black",  
-     lwd=1.0, xlim=c(-1,15), ylim=c(-0.5,3.5), cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,
-     ylab="Terminal Outcome (g)", xlab="Time Scheduled for Therapy (sqrt(hrs))")
-## Cyan = <90 days post stroke, green = <365 days post stroke, purple = > 365 days post stroke
-
-
-# Plot of outcomes by AGE
-# the ntile function chops the variable into X equally sized groups.
-LOHSE$AGEq <- ntile(LOHSE$age_base, 4)  
-# Topocolors is just a color pallette that I like
-palette(topo.colors(4)) 
-
-plot(LOHSE$term_g~LOHSE$age_base, bty='n', xlim=c(40,90), ylim=c(-0.5,3.5), bg=LOHSE$AGEq, col = "black",
-     pch=21, cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,  
-     ylab="Terminal Outcome (g)", xlab="Average Age (years)")
-
+## Figure 2 --------------------------------------------------------------------
 #Plot of outcomes by DPS
-plot(LOHSE$term_g~LOHSE$yrs_ps, bty='n', type='p', pch=21, bg=LOHSE$days_cat, col="black",  
-     lwd=1.0, xlim=c(0,10), ylim=c(-0.5,3.5), cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,
+palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
+plot(LOHSE$term_g~LOHSE$yrs_ps, bty='n', type='p', pch=21, bg=LOHSE$days_cat, 
+     col="black", lwd=1.0, xlim=c(0,10), ylim=c(-0.5,3.5), 
+     cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,
      ylab="Terminal Outcome (g)", xlab="Time Post Stroke (yrs)")
 
-plot(LOHSE$term_g~LOHSE$rtDPS, bty='n', type='p', pch=21, bg=LOHSE$days_cat, col="black",  
-     lwd=1.0, xlim=c(0,60), ylim=c(-0.5,3.5), cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,
+plot(LOHSE$term_g~LOHSE$rtDPS, bty='n', type='p', pch=21, bg=LOHSE$days_cat, 
+     col="black", lwd=1.0, xlim=c(0,60), ylim=c(-0.5,3.5), 
+     cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,
      ylab="Terminal Outcome (g)", xlab="Time Post Stroke (sqrt(days)")
-#The square root of DPS is the actual variable in our models, so I think we should use it in the figures
+#The square root of DPS is the actual variable in our models, so I think we 
+# should use it in the figures
 
 #Plot of outcomes by Time Scheduled for therapy
 LOHSE$TIMEq <- ntile(LOHSE$rtTIME, 4)  
-palette(topo.colors(4))
+palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
 
-plot(LOHSE$term_g~LOHSE$rtTIME, bty='n', xlim=c(0,15), ylim=c(-0.5,3.5), bg=LOHSE$TIMEq, col = "black",
-     pch=21, cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,  
-     ylab="Terminal Outcome (g)", xlab="Estimated Time Scheduled for Therapy (sqrt(hrs))")
+plot(LOHSE$term_g~LOHSE$rtTIME, bty='n', xlim=c(0,15), ylim=c(-0.5,3.5), 
+     bg=LOHSE$TIMEq, col = "black", pch=21, cex=sqrt(LOHSE$base_n)/2, 
+     cex.axis=1.25, cex.lab=1.25,  ylab="Terminal Outcome (g)", 
+     xlab="Estimated Time Scheduled for Therapy (sqrt(hrs))")
 
-plot(LOHSE$term_g~LOHSE$time_50, bty='n', xlim=c(0,250), ylim=c(-0.5,3.5), bg=LOHSE$TIMEq, col = "black",
-     pch=21, cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,  
-     ylab="Terminal Outcome (g)", xlab="Estimated Time Scheduled for Therapy (hrs))")
-
+plot(LOHSE$term_g~LOHSE$time_50, bty='n', xlim=c(0,250), ylim=c(-0.5,3.5), 
+     bg=LOHSE$TIMEq, col = "black", pch=21, cex=sqrt(LOHSE$base_n)/2, 
+     cex.axis=1.25, cex.lab=1.25, ylab="Terminal Outcome (g)", 
+     xlab="Estimated Time Scheduled for Therapy (hrs))")
+## -----------------------------------------------------------------------------
 
 
 #################################################
@@ -449,30 +470,35 @@ cor.test(resid(b4),fitted(b4))
 # We can also export the BIGN data (and the variables we created) to a csv
 write.csv(BIGN, file="data SCOAR BIG N ANALYSIS.csv")
 
+## Figure 2 with only studies N >20 --------------------------------------------
 # Plot of outcomes by AGE
 # the ntile function chops the variable into X equally sized groups.
 BIGN$AGEq <- ntile(BIGN$age_base, 4)  
 # Topocolors is just a color pallette that I like
-palette(topo.colors(4)) 
+palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
 
-plot(BIGN$term_g~BIGN$age_base, bty='n', xlim=c(40,90), ylim=c(-0.5,3.5), bg=BIGN$AGEq, col = "black",
-     pch=21, cex=sqrt(BIGN$base_n)/2, cex.axis=1.25, cex.lab=1.25,  
-     ylab="Terminal Outcome (g)", xlab="Average Age (years)")
+plot(BIGN$term_g~BIGN$age_base, bty='n', xlim=c(40,90), ylim=c(-0.5,3.5), 
+     bg=BIGN$AGEq, col = "black", pch=21, cex=sqrt(BIGN$base_n)/2, 
+     cex.axis=1.25, cex.lab=1.25, ylab="Terminal Outcome (g)", 
+     xlab="Average Age (years)")
 
 #Plot of outcomes by DPS
-plot(BIGN$term_g~BIGN$rtDPS, bty='n', type='p', pch=21, bg=BIGN$days_cat, col="black",  
-     lwd=1.0, xlim=c(0,60), ylim=c(-0.5,3.5), cex=sqrt(BIGN$base_n)/2, cex.axis=1.25, cex.lab=1.25,
+plot(BIGN$term_g~BIGN$rtDPS, bty='n', type='p', pch=21, bg=BIGN$days_cat, 
+     col="black", lwd=1.0, xlim=c(0,60), ylim=c(-0.5,3.5), 
+     cex=sqrt(BIGN$base_n)/2, cex.axis=1.25, cex.lab=1.25,
      ylab="Terminal Outcome (g)", xlab="Time Post Stroke (sqrt(days)")
-#The square root of DPS is the actual variable in our models, so I think we should use it in the figures
+#The square root of DPS is the actual variable in our models, so I think we 
+# should use it in the figures
 
 #Plot of outcomes by Time Scheduled for therapy
 BIGN$TIMEq <- ntile(BIGN$rtTIME, 4)  
-palette(topo.colors(4))
+palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
 
-plot(BIGN$term_g~BIGN$rtTIME, bty='n', xlim=c(0,15), ylim=c(-0.5,3.5), bg=BIGN$TIMEq, col = "black",
-     pch=21, cex=sqrt(BIGN$base_n)/2, cex.axis=1.25, cex.lab=1.25,  
-     ylab="Terminal Outcome (g)", xlab="Estimated Time Scheduled for Therapy (sqrt(hrs))")
-
+plot(BIGN$term_g~BIGN$rtTIME, bty='n', xlim=c(0,15), ylim=c(-0.5,3.5), 
+     bg=BIGN$TIMEq, col = "black", pch=21, cex=sqrt(BIGN$base_n)/2, 
+     cex.axis=1.25, cex.lab=1.25, ylab="Terminal Outcome (g)", 
+     xlab="Estimated Time Scheduled for Therapy (sqrt(hrs))")
+## -----------------------------------------------------------------------------
 
 
 
@@ -626,14 +652,18 @@ cor.test(resid(f5),fitted(f5))
 # Exporting the FMA data to a .csv file
 write.csv(FMA, file="data SCOAR FMA ANALYSIS.csv")
 
+## Figure 3A -------------------------------------------------------------------
 # Plots of the FMA data
-palette(c("purple","chartreuse","cyan"))
-
-plot(FMA$term_g~FMA$rtTIME, bty='n', type='p', pch=21, bg=FMA$days_cat, col="black",  
-     lwd=1.0, xlim=c(-1,15), ylim=c(-0.5,3.5), cex.axis=1.25, cex.lab=1.25,
-     cex=sqrt(FMA$base_n)/2, 
+palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
+summary(FMA$days_cat)
+plot(FMA$term_g~FMA$rtTIME, bty='n', type='p', pch=21, bg=FMA$days_cat, 
+     col="black", lwd=1.0, xlim=c(-1,15), ylim=c(-0.5,3.5), cex.axis=1.25, 
+     cex.lab=1.25, cex=sqrt(FMA$base_n)/2,
      ylab="Terminal FMA (g)", xlab="Time Scheduled for Therapy (sqrt(hrs))")
-
+legend("top", inset=.02, title="Days Post Stroke",
+       c("<90 Days","<1 Year",">1 Year"), 
+       fill=c("#41b6c4", "#a1dab4", "#225ea8"), horiz=TRUE, cex=0.8)
+## -----------------------------------------------------------------------------
 #Plotting relationships between the baseline and terminal means 
 g1<-ggplot(FMA, aes(x = base_m, y = term_m, color = as.factor(outcome_name))) +
     geom_point(size = 4, alpha=0.5) + theme(text = element_text(size=20)) +
@@ -793,13 +823,19 @@ cor.test(resid(s5),fitted(s5))
 #Exporting the SPEED data to a .csv file
 #write.csv(SPEED, file="data SCOAR SPEED ANALYSIS.csv")
 
+## Figure 3B -------------------------------------------------------------------
 # Plots of the SPEED data
-palette(c("purple","chartreuse","cyan"))
+palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
 
-plot(SPEED$term_g~SPEED$rtTIME, bty='n', type='p', pch=21, bg=SPEED$days_cat, col="black",  
-     lwd=1.0, xlim=c(-1,15), ylim=c(-0.5,3.5), cex.axis=1.25, cex.lab=1.25,
-     cex=1/sqrt(SPEED$term_Vg)/(1/sqrt(max(SPEED$term_Vg))), 
-     ylab="Terminal Gait Speed (g)", xlab="Time Scheduled for Therapy (sqrt(hrs))")
+plot(SPEED$term_g~SPEED$rtTIME, bty='n', type='p', pch=21, bg=SPEED$days_cat, 
+     col="black", lwd=1.0, xlim=c(-1,15), ylim=c(-0.5,3.5), cex.axis=1.25, 
+     cex.lab=1.25, cex=sqrt(SPEED$base_n)/2, 
+     ylab="Terminal Gait Speed (g)", 
+     xlab="Time Scheduled for Therapy (sqrt(hrs))")
+legend("top", inset=.02, title="Days Post Stroke",
+       c("<90 Days","<1 Year",">1 Year"), 
+       fill=c("#41b6c4", "#a1dab4", "#225ea8"), horiz=TRUE, cex=0.8)
+## -----------------------------------------------------------------------------
 
 # There is an issue with plotting baseline means against terminal means
 # First the Fuzaro study need to be removed because it used %Time and not m/s
