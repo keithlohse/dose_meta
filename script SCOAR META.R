@@ -8,7 +8,7 @@ library("metafor"); library("dplyr"); library("ggplot2")
 getwd()
 setwd("C:/Users/krl0022/Documents/GitHub/dose_meta/") 
 list.files()
-# make sure "data SCOAR TEXT OUTLIERS REMOVED.csv" is in the directory.
+# make sure "data SCOAR TEXT OUTLIERS REMOVED.csv" is in the working directory.
 
 # Read in the full data set
 DATA<-read.csv("data SCOAR TEXT OUTLIERS REMOVED.csv", header = TRUE) 
@@ -18,8 +18,7 @@ head(DATA)
 # DATA<-read.table("https://raw.github.com/keithlohse/dose_meta/master/data%20SCOAR%20TEXT%20OUTLIERS%20REMOVED.txt",
 #    header = TRUE, sep="\t")
 # head(DATA)
-
-# Note that all effect sizes greater than d = 3.0 have been removed
+# Note this means that all effect sizes greater than d = 3.0 have been removed.
 
 
 ##########################################
@@ -34,17 +33,17 @@ head(DATA)
 # Create different sets of data
 # 1. DATA <- contains all data for experimental and control groups
 # 2. LOHSE <- contains only primary outcomes and excludes missing cases
-# 3. BIGN <- contains only primary outcomes for groups with base n > 30
 # 3. CTRLS <- contains only the control group data from LOHSE
 # 4. EXPS <- contains on the experimental group data from LOHSE
-# 5. FMA <- contains data for Fugl-Meyer Assessment outcomes excludes missing cases
-# 6. SPEED <- contains data for gait speed outcomes excludes missing cases
+# 5. BIGN <- contains only primary outcomes for groups with base n > 30
+# 6. FMA <- contains data for Fugl-Meyer Assessment outcomes excludes missing cases
+# 7. SPEED <- contains data for gait speed outcomes excludes missing cases
 
 # Creating the "LOHSE" subset
 LOHSE<-subset(DATA, SCOAR_outcome == "lohse")
 # Length should be 489 (total number of independent groups)
 length(LOHSE$SCOAR_outcome)
-# Sum should be 12,846 (total number of participants)
+# Sum should be 12,847 (total number of participants)
 sum(LOHSE$base_n)
 
 # Remove studies missing time for therapy
@@ -275,27 +274,8 @@ cor.test(resid(m5),fitted(m5))
 #########################################
 # Plots for Multivariable Relationships #
 #########################################
-# palette(c("#e0ecf4", "#9ebcda", "#8856a7"))
-# 
-# # Plot of outcomes by DOSE and DPS
-# plot(LOHSE$term_g~LOHSE$rtTIME, bty='n', type='p', pch=21, bg=LOHSE$days_cat, 
-#      col="black", lwd=1.0, xlim=c(-1,15), ylim=c(-0.5,3.5), 
-#      cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,
-#      ylab="Terminal Outcome (g)", xlab="Time Scheduled for Therapy (sqrt(hrs))")
-# ## Cyan = <90 days post stroke, green = <365 days post stroke, purple = > 365 days post stroke
-# 
-# 
-# # Plot of outcomes by AGE
-# # the ntile function chops the variable into X equally sized groups.
-# LOHSE$AGEq <- ntile(LOHSE$age_base, 4)  
-# palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
-# 
-# plot(LOHSE$term_g~LOHSE$age_base, bty='n', xlim=c(40,90), ylim=c(-0.5,3.5), bg=LOHSE$AGEq, col = "black",
-#      pch=21, cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,  
-#      ylab="Terminal Outcome (g)", xlab="Average Age (years)")
-
 ## Figure 2 --------------------------------------------------------------------
-#Plot of outcomes by DPS
+# Plot of outcomes by Days Post Stroke (DPS)
 palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
 plot(LOHSE$term_g~LOHSE$yrs_ps, bty='n', type='p', pch=21, bg=LOHSE$days_cat, 
      col="black", lwd=1.0, xlim=c(0,10), ylim=c(-0.5,3.5), 
@@ -305,9 +285,10 @@ plot(LOHSE$term_g~LOHSE$yrs_ps, bty='n', type='p', pch=21, bg=LOHSE$days_cat,
 plot(LOHSE$term_g~LOHSE$rtDPS, bty='n', type='p', pch=21, bg=LOHSE$days_cat, 
      col="black", lwd=1.0, xlim=c(0,60), ylim=c(-0.5,3.5), 
      cex=sqrt(LOHSE$base_n)/2, cex.axis=1.25, cex.lab=1.25,
-     ylab="Terminal Outcome (g)", xlab="Time Post Stroke (sqrt(days)")
+     ylab="Terminal Outcome (g)", xlab="Time Post Stroke (sqrt(days))")
 #The square root of DPS is the actual variable in our models, so I think we 
-# should use it in the figures
+# should use it in the figures, however, below is the coding for putting 
+# linear time (e.g. untransformed) on the x-axis)
 
 #Plot of outcomes by Time Scheduled for therapy
 LOHSE$TIMEq <- ntile(LOHSE$rtTIME, 4)  
@@ -326,7 +307,7 @@ plot(LOHSE$term_g~LOHSE$time_50, bty='n', xlim=c(0,250), ylim=c(-0.5,3.5),
 
 
 #################################################
-### Analysis of the "Big" groups only, n > 20 ###
+### Analysis of the "big" groups only, n > 20 ###
 #################################################
 # Descriptive Statistics for the BIGN data
 summary(BIGN$age_base)
@@ -361,7 +342,7 @@ forest(b0, slab=paste(BIGN$author, BIGN$year, sep=", "), cex=1.5)
 palette(c("orange","dodgerblue"))
 funnel(b0, pch=21, bg=BIGN$group, cex = 1.5, cex.axis=1.25, cex.lab=1.25, xlab="Terminal Outcome (g)")
 # Statistical test of symmetry (see Eggers, 1997)
-regtest(m0, model = "lm") 
+regtest(b0, model = "lm") 
 # Significant result indicates bias in the distribution of results
 
 # Moderator Analysis of Treatment Versus Control Groups
@@ -487,20 +468,11 @@ plot(BIGN$term_g~BIGN$rtDPS, bty='n', type='p', pch=21, bg=BIGN$days_cat,
      col="black", lwd=1.0, xlim=c(0,60), ylim=c(-0.5,3.5), 
      cex=sqrt(BIGN$base_n)/2, cex.axis=1.25, cex.lab=1.25,
      ylab="Terminal Outcome (g)", xlab="Time Post Stroke (sqrt(days)")
-#The square root of DPS is the actual variable in our models, so I think we 
-# should use it in the figures
 
-#Plot of outcomes by Time Scheduled for therapy
-BIGN$TIMEq <- ntile(BIGN$rtTIME, 4)  
-palette(c("#ffffcc", "#a1dab4", "#41b6c4", "#225ea8"))
 
-plot(BIGN$term_g~BIGN$rtTIME, bty='n', xlim=c(0,15), ylim=c(-0.5,3.5), 
-     bg=BIGN$TIMEq, col = "black", pch=21, cex=sqrt(BIGN$base_n)/2, 
-     cex.axis=1.25, cex.lab=1.25, ylab="Terminal Outcome (g)", 
-     xlab="Estimated Time Scheduled for Therapy (sqrt(hrs))")
+
+
 ## -----------------------------------------------------------------------------
-
-
 
 ###########################################
 ### Analysis of the FMA for the UE only ###
@@ -640,7 +612,7 @@ summary(f6)
 # logLik  deviance       AIC       BIC      AICc  
 # -9.5106   95.9703   35.0213   53.9769   37.0784
 
-# So f5 is our best fitting model based on the AIC and AICc
+# So F2/f5 are our best fitting models based on the AIC and AICc
 # but lets double-check our statistical assumptions/diagnostics
 # The distribution of residuals for this model is approximately normal
 plot(density(resid(f5))) 
@@ -675,6 +647,7 @@ g1<-ggplot(FMA, aes(x = base_m, y = term_m, color = as.factor(outcome_name))) +
     labs(x = "FMA at Baseline", y = "FMA at Terminal Assessment")
 print(g1)
 
+## -----------------------------------------------------------------------------
 
 
 ################################################
